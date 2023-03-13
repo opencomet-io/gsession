@@ -7,8 +7,8 @@ import (
 type kindOfSession string
 
 const (
-	TempSession    kindOfSession = "temp"
-	RefreshSession kindOfSession = "refresh"
+	tempSession    kindOfSession = "temp"
+	refreshSession kindOfSession = "refresh"
 )
 
 type session struct {

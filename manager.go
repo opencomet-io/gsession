@@ -1,5 +1,8 @@
 package gsession
 
 type Manager struct {
-	Store Store
+	TempStore    Store
+	RefreshStore Store
+	Codec        Codec
+	TokenLength  int
 }
