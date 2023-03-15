@@ -20,14 +20,40 @@ type InMemoryStore struct {
 
 var _ gsession.Store = (*InMemoryStore)(nil)
 
-func (s *InMemoryStore) Get(ctx context.Context, token string) ([]byte, time.Time, error) {
-	return nil, time.Time{}, nil
+func New() *InMemoryStore {
+	s := &InMemoryStore{
+		entries: make(map[string]entryPayload),
+	}
+	return s
 }
 
-func (s *InMemoryStore) Set(ctx context.Context, token string, data []byte, expiry time.Time) error {
+func (s *InMemoryStore) Get(_ context.Context, token string) ([]byte, time.Time, bool, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	payload, found := s.entries[token]
+	if !found || time.Now().UTC().After(payload.expiry) {
+		return nil, time.Time{}, false, nil
+	}
+
+	return payload.data, payload.expiry, true, nil
+}
+
+func (s *InMemoryStore) Set(_ context.Context, token string, data []byte, expiry time.Time) error {
+	s.mu.Lock()
+
+	payload := entryPayload{data, expiry}
+	s.entries[token] = payload
+
+	s.mu.Unlock()
 	return nil
 }
 
-func (s *InMemoryStore) Delete(ctx context.Context, token string) error {
+func (s *InMemoryStore) Delete(_ context.Context, token string) error {
+	s.mu.Lock()
+
+	delete(s.entries, token)
+
+	s.mu.Unlock()
 	return nil
 }

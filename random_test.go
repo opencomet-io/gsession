@@ -63,10 +63,7 @@ func TestGenerateRandomToken(t *testing.T) {
 			t.Parallel()
 
 			token, err := generateRandomToken(tt.tokenLength)
-			assert.NoError(t, err)
-			if err != nil {
-				return
-			}
+			require.NoError(t, err)
 
 			match := tt.matchingPattern.MatchString(token)
 			assert.True(t, match, "token string does not match the specified regexp pattern")
