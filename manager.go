@@ -30,6 +30,22 @@ func (m *Manager) saveSession(ctx context.Context, token string, vals map[string
 	return m.insertSession(ctx, token, vals, expiry)
 }
 
+func (m *Manager) retrieveSession(ctx context.Context, token string) (map[string]any, time.Time, bool, error) {
+	storageToken := m.TokenPrefix + token
+
+	data, _, found, err := m.Store.Get(ctx, storageToken)
+	if err != nil || !found {
+		return nil, time.Time{}, false, err
+	}
+
+	vals, expiry, err := m.Codec.Decode(data)
+	if err != nil {
+		return nil, time.Time{}, false, err
+	}
+
+	return vals, expiry, true, nil
+}
+
 func (m *Manager) InitSession(ctx context.Context, vals map[string]any) (string, error) {
 	token, err := generateRandomToken(m.TokenLength)
 	if err != nil {
