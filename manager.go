@@ -64,6 +64,30 @@ func (m *Manager) InitSession(ctx context.Context, vals map[string]any) (string,
 	return token, nil
 }
 
+func (m *Manager) GetSessionValues(ctx context.Context, token string) (map[string]any, error) {
+	vals, _, found, err := m.retrieveSession(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, ErrNotFound
+	}
+
+	return vals, nil
+}
+
+func (m *Manager) SetSessionValues(ctx context.Context, token string, vals map[string]any) error {
+	_, _, found, err := m.retrieveSession(ctx, token)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return ErrNotFound
+	}
+
+	return m.saveSession(ctx, token, vals)
+}
+
 func (m *Manager) AssertSessionValues(ctx context.Context, token string, want map[string]any) (bool, error) {
 	return false, nil
 }
