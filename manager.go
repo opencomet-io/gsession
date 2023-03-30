@@ -2,6 +2,7 @@ package gsession
 
 import (
 	"context"
+	"reflect"
 	"time"
 )
 
@@ -64,6 +65,28 @@ func (m *Manager) InitSession(ctx context.Context, vals map[string]any) (string,
 	return token, nil
 }
 
+func (m *Manager) InvalidateSession(ctx context.Context, token string) error {
+	return m.Store.Delete(ctx, token)
+}
+
+func (m *Manager) RenewToken(ctx context.Context, token string) (string, error) {
+	vals, err := m.GetSessionValues(ctx, token)
+	if err != nil {
+		return "", err
+	}
+
+	if err = m.InvalidateSession(ctx, token); err != nil {
+		return "", err
+	}
+
+	newToken, err := m.InitSession(ctx, vals)
+	if err != nil {
+		return "", err
+	}
+
+	return newToken, nil
+}
+
 func (m *Manager) GetSessionValues(ctx context.Context, token string) (map[string]any, error) {
 	vals, _, found, err := m.retrieveSession(ctx, token)
 	if err != nil {
@@ -89,5 +112,10 @@ func (m *Manager) SetSessionValues(ctx context.Context, token string, vals map[s
 }
 
 func (m *Manager) AssertSessionValues(ctx context.Context, token string, want map[string]any) (bool, error) {
-	return false, nil
+	vals, err := m.GetSessionValues(ctx, token)
+	if err != nil {
+		return false, err
+	}
+
+	return reflect.DeepEqual(want, vals), nil
 }
