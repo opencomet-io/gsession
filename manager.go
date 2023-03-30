@@ -2,8 +2,9 @@ package gsession
 
 import (
 	"context"
-	"reflect"
 	"time"
+
+	"github.com/opencomet-io/gsession/memstore"
 )
 
 type Manager struct {
@@ -12,6 +13,17 @@ type Manager struct {
 	TokenPrefix string
 	TokenLength int
 	Lifetime    time.Duration
+}
+
+func NewManager() *Manager {
+	manager := &Manager{
+		Store:       memstore.New(),
+		Codec:       GobCodec{},
+		TokenPrefix: "gsession:",
+		TokenLength: 32,
+		Lifetime:    20 * time.Minute,
+	}
+	return manager
 }
 
 func (m *Manager) insertSession(ctx context.Context, token string, vals map[string]any, expiry time.Time) error {
@@ -109,13 +121,4 @@ func (m *Manager) SetSessionValues(ctx context.Context, token string, vals map[s
 	}
 
 	return m.saveSession(ctx, token, vals)
-}
-
-func (m *Manager) AssertSessionValues(ctx context.Context, token string, want map[string]any) (bool, error) {
-	vals, err := m.GetSessionValues(ctx, token)
-	if err != nil {
-		return false, err
-	}
-
-	return reflect.DeepEqual(want, vals), nil
 }
